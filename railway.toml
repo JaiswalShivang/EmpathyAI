@@ -1,0 +1,9 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "cd client && npm install && npm run build && cd ../server && npm install"
+
+[build.env]
+NODE_ENV = "production"
+
+[deploy]
+startCommand = "cd server && npm start"

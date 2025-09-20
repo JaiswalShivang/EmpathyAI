@@ -1,6 +1,7 @@
 require('dotenv').config({ path: '../.env' });
 const express = require('express');
 const http = require('http');
+const path = require('path');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const connectDB = require('./config/db');
@@ -28,6 +29,14 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/meditation-resources', meditationResourceRoutes);
 app.use('/api/doctor-notes', doctorNoteRoutes);
 app.use('/api/zego', zegoRoutes);
+
+// Serve static files from the React app build directory
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Catch all handler: send back React's index.html file for client-side routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
 
 // Consultation token generation endpoint
 app.post('/api/consultation/token', (req, res) => {

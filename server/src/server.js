@@ -69,47 +69,6 @@ app.post('/api/consultation/token', (req, res) => {
   }
 });
 
-// Health check endpoint
-app.get('/api/health', async (req, res) => {
-  try {
-    // Check database connectivity
-    const mongoose = require('mongoose');
-    const dbStatus = mongoose.connection.readyState === 1 ? 'healthy' : 'unhealthy';
-
-    // Check environment variables
-    const requiredEnvVars = ['JWT_SECRET', 'MONGO_URI'];
-    const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
-
-    const healthStatus = {
-      status: dbStatus === 'healthy' && missingEnvVars.length === 0 ? 'healthy' : 'unhealthy',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      database: dbStatus,
-      environment: {
-        nodeVersion: process.version,
-        environment: process.env.NODE_ENV || 'development',
-        missingEnvVars: missingEnvVars.length > 0 ? missingEnvVars : null
-      },
-      services: {
-        zegoConfigured: !!(process.env.ZEGO_APP_ID && process.env.ZEGO_SERVER_SECRET),
-        googleAIConfigured: !!(process.env.GOOGLE_API_KEY),
-        pineconeConfigured: !!(process.env.PINECONE_API_KEY && process.env.PINECONE_INDEX_NAME)
-      }
-    };
-
-    const statusCode = healthStatus.status === 'healthy' ? 200 : 503;
-    res.status(statusCode).json(healthStatus);
-
-  } catch (error) {
-    console.error('Health check error:', error);
-    res.status(503).json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: error.message
-    });
-  }
-});
-
 app.get('/ping', (req, res) => res.send('pong'));
 const server = http.createServer(app);
 socketConnection(server);

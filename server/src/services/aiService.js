@@ -6,6 +6,8 @@ const { getDoctorRecommendations, formatDoctorForResponse } = require('./doctorR
 
 const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 console.log('🤖 Google AI initialized successfully');
+
+// YouTube Meditation Videos Dataset
 const meditationVideos = [
   {
     title: "Daily Calm | 10 Minute Mindfulness Meditation | Be Present",
@@ -89,10 +91,14 @@ const pinecone = new Pinecone();
 const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME);
 console.log('🌲 Pinecone initialized successfully');
 
+// Store conversation history per user
 const userHistories = new Map();
+
+// Function to recommend YouTube meditation videos
 function recommendMeditationVideos(userQuery, userHistory = []) {
   const query = userQuery.toLowerCase();
 
+  // Keywords for different meditation types
   const stressKeywords = ['stress', 'anxiety', 'worried', 'overwhelmed', 'tension', 'pressure'];
   const focusKeywords = ['focus', 'concentration', 'attention', 'distraction', 'mindfulness'];
   const sleepKeywords = ['sleep', 'insomnia', 'rest', 'relaxation', 'calm'];
@@ -102,6 +108,7 @@ function recommendMeditationVideos(userQuery, userHistory = []) {
 
   let recommendations = [];
 
+  // Filter videos based on user query
   if (stressKeywords.some(keyword => query.includes(keyword))) {
     recommendations = meditationVideos.filter(video =>
       video.description.toLowerCase().includes('stress') ||
@@ -146,10 +153,12 @@ function recommendMeditationVideos(userQuery, userHistory = []) {
     );
   }
 
+  // If no specific matches, return general recommendations
   if (recommendations.length === 0) {
-    recommendations = meditationVideos.slice(0, 3);
+    recommendations = meditationVideos.slice(0, 3); // Return first 3 videos
   }
 
+  // Limit to 2 recommendations
   return recommendations.slice(0, 2);
 }
 
@@ -176,7 +185,7 @@ Take the latest user question and rewrite it into a clear, complete, standalone 
         },
     });
 
-    history.pop();
+    history.pop(); // Remove the temp addition
     return response.text;
 }
 
@@ -186,8 +195,10 @@ async function answerQuestion(userId, question) {
     }
     const history = userHistories.get(userId);
 
+    // Check if this is a doctor-related query
     const isDoctorQuery = isDoctorRecommendationQuery(question);
 
+    // Debug logging for query classification
     console.log('Query classification:', {
         question: question,
         isDoctorQuery: isDoctorQuery,
@@ -196,6 +207,7 @@ async function answerQuestion(userId, question) {
     });
 
     if (isDoctorQuery) {
+        // Handle doctor recommendation
         const doctorRecommendations = await getDoctorRecommendations(question);
 
         let responseText = doctorRecommendations.message + "\n\n";
